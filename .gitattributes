@@ -1,0 +1,7 @@
+# 统一用 LF，避免 Windows 上 CRLF 混进脚本
+* text=auto eol=lf
+*.js text eol=lf
+*.md text eol=lf
+*.html text eol=lf
+*.png binary
+*.jpg binary

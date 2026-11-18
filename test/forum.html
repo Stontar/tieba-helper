@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>测试吧 - 新版贴吧（模拟）</title>
+<style>
+  body { font: 14px/1.6 system-ui, "Microsoft YaHei"; margin: 0; color: #111; background: #f6f7f9; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 16px; }
+  .tabs { display: flex; gap: 8px; margin: 8px 0 16px; }
+  .tabs a { padding: 4px 12px; border: 1px solid #dbe4f5; border-radius: 999px; text-decoration: none; color: #2563eb; }
+  .sortbar { display: flex; gap: 4px; margin-bottom: 12px; }
+  .sortbar .tab-item { padding: 4px 14px; cursor: pointer; border-radius: 6px; background: #eef0f3; }
+  .sortbar .tab-item.active { background: #2563eb; color: #fff; }
+  .card { background: #fff; border: 1px solid #e8eaee; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+  .post { display: block; font-weight: 600; color: #1f2937; text-decoration: none; }
+  .post-meta { color: #6b7280; font-size: 12px; }
+  .load-more { display: block; width: 100%; padding: 8px; margin: 8px 0; border: 1px dashed #c7cdd6; background: #fff; border-radius: 8px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="tabs">
+    <a href="/f?kw=test&tab=main">看贴</a>
+    <a href="/f?kw=test&tab=album">图片</a>
+    <a href="/f?kw=test&tab=good">吧主推荐</a>
+    <a href="/f?kw=test&tab=video">视频</a>
+  </div>
+  <div class="sortbar" id="sortbar">
+    <div class="tab-item active" data-sort="hot">热门</div>
+    <div class="tab-item" data-sort="new">最新</div>
+    <div class="tab-item" data-sort="good">精华</div>
+  </div>
+  <div id="list">
+    <div class="card"><a class="post" href="/p/1">第一个帖子标题</a><div class="post-meta">张三 · 3 分钟前</div></div>
+    <div class="card"><a class="post" href="/p/2">第二个帖子标题</a><div class="post-meta">李四 · 8 分钟前</div></div>
+  </div>
+  <button class="load-more" id="more">加载更多</button>
+</div>
+<script>
+  window.__clicks = [];
+  document.getElementById('sortbar').addEventListener('click', (e) => {
+    const item = e.target.closest('.tab-item');
+    if (!item) return;
+    window.__clicks.push(item.dataset.sort);
+    document.querySelectorAll('#sortbar .tab-item').forEach((n) => n.classList.remove('active'));
+    item.classList.add('active');
+  });
+  let page = 0;
+  document.getElementById('more').addEventListener('click', () => {
+    page++;
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = '<a class="post" href="/p/' + (100 + page) + '">追加帖子 ' + page + '</a>';
+    document.getElementById('list').appendChild(card);
+  });
+</script>
+</body>
+</html>

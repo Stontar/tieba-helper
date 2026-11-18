@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>测试帖 - 新版贴吧（模拟）</title>
+<style>
+  /* 本文件刻意复刻新版贴吧（pb 版）真实 DOM 与默认尺寸，
+     用于验证脚本的「楼中楼」样式只影响楼中楼、不影响主楼/楼层/回复框。 */
+  body { font: 14px/1.6 system-ui, "Microsoft YaHei"; margin: 0; color: #111; background: #f6f7f9; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 16px; }
+
+  .head-line.user-info { display: flex; align-items: center; height: 40px; }
+  .left-box { display: flex; align-items: center; width: 40px; height: 40px; }
+  .left-box > span { display: block; width: 40px; height: 40px; }
+  .popover__reference { display: block; width: 40px; height: 40px; }
+  a.avatar { display: block; width: 40px; height: 40px; flex: 0 0 auto; }
+  img.avatar-img { display: inline; width: 40px; height: 40px; border-radius: 50%; background: #cbd5e1; }
+  .head-info { display: block; margin: -16px 0 0; padding: 0 0 0 8px; }
+  .name-info { display: flex; align-items: center; }
+  .head-name { font-size: 13px; font-weight: 600; color: #2563eb; }
+  .head-spacer { flex: 1 1 0%; height: 40px; }
+  .btn-wrapper { height: 0; }
+
+  .comment-content.no-extra-margin { display: inline; margin: -16px 0 0 48px; }
+  .pb-rich-text, .pc-pb-comments-desc { width: 100%; }
+  .pb-text-wrapper.text { font-size: 13px; line-height: 26px; }
+  .pc-pb-comments-desc { display: inline-flex; align-items: center; height: 24px; margin: 5px 0 0; font-size: 13px; color: #6b7280; }
+  .comment-desc-right { display: flex; height: 24px; margin-left: auto; }
+  .zan-container-dark, .reply-container { display: flex; align-items: center; height: 24px; margin-left: 8px; padding: 0 6px; }
+
+  /* 主楼 */
+  .image-text { background: #fff; border: 1px solid #e8eaee; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+  .pb-content-wrap { font-size: 15px; line-height: 25px; }
+
+  /* 回复框 */
+  .pc-pb-reply-box { margin: 0 0 14px; }
+  .reply-area { display: flex; align-items: flex-start; }
+  .avatar-box { width: 40px; height: 40px; margin-right: 8px; }
+  .reply-input { flex: 1; }
+  .reply-input .box { height: 40px; line-height: 40px; padding-left: 12px; background: #eef1f5; border-radius: 76px; color: #9ca3af; }
+
+  /* 回复排序（热门 / 正序 / 倒序）——脚本应默认切到「正序」 */
+  .sub-tab-container { display: flex; align-items: center; gap: 4px; width: fit-content; margin: 8px 0; padding: 0 1px; background: #eef1f6; border-radius: 14.5px; }
+  .sub-tab-item { display: flex; align-items: center; height: 27px; padding: 0 8px; font-size: 12px; color: #6b7280; border-radius: 14.5px; cursor: pointer; }
+  .sub-tab-item-active { background: #fff; color: #111; }
+
+  /* 楼层 */
+  .pb-comment-item { position: relative; padding: 2px 0; background: #fff; border: 1px solid #e8eaee; border-radius: 10px; margin-bottom: 12px; }
+  .pb-comment-item .floor-label { color: #f97316; font-weight: 600; font-size: 12px; }
+
+  /* 楼中楼（默认样式：与楼层一致的大头像，脚本应当只压缩这里） */
+  .lzl-wrapper { display: block; width: 100%; }
+  .pb-lzl-item { position: relative; padding: 2px 0; }
+  .pb-lzl-item .head-info { margin: -18px 0 0; }
+  .pb-lzl-item .comment-content.no-extra-margin { margin: -16px 0 0 48px; }
+  .show-more-lzl { margin: 14px 0 0 48px; color: rgb(48, 76, 191); font-size: 13px; cursor: pointer; }
+
+  .load-more { display: block; width: 100%; padding: 8px; margin: 8px 0; border: 1px dashed #c7cdd6; background: #fff; border-radius: 8px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="wrap" id="postlist">
+
+  <!-- ↓↓↓ 主楼：头像必须保持 40px ↓↓↓ -->
+  <div class="image-text" id="main-post">
+    <div class="head-line user-info">
+      <div class="left-box"><span><div class="popover__reference"><a class="avatar" href="#"><img class="avatar-img" alt=""></a></div></span></div>
+      <div class="head-info"><a class="name-info-link" href="#"><div class="name-info"><a class="head-name" href="#">楼主</a></div></a></div>
+      <div class="head-spacer"></div>
+      <div class="btn-wrapper"></div>
+    </div>
+    <div class="pb-content-wrap">楼主的正文内容第一段。</div>
+  </div>
+
+  <!-- ↓↓↓ 回复框：头像必须保持 40px ↓↓↓ -->
+  <div class="pc-pb-reply-box pc-reply-box">
+    <div class="reply-area">
+      <div class="avatar-box"><img class="avatar-img" alt=""></div>
+      <div class="reply-input"><div class="box">参与讨论涨经验 去APP回复经验更多</div></div>
+    </div>
+  </div>
+
+  <!-- ↓↓↓ 回复排序：默认热门，脚本应切到正序 ↓↓↓ -->
+  <div class="sub-tab-container">
+    <div class="sub-tab-item sub-tab-item-active">热门</div>
+    <div class="sub-tab-item">正序</div>
+    <div class="sub-tab-item">倒序</div>
+  </div>
+
+  <!-- ↓↓↓ 2 楼（第 1 条回复）：楼层头像保持 40px，只有 .lzl-wrapper 内被压缩 ↓↓↓ -->
+  <div class="pb-comment-item post" data-floor="2" data-id="1">
+    <div class="head-line user-info">
+      <div class="left-box"><span><div class="popover__reference"><a class="avatar" href="#"><img class="avatar-img" alt=""></a></div></span></div>
+      <div class="head-info"><a class="name-info-link" href="#"><div class="name-info"><a class="head-name" href="#">用户A</a></div></a></div>
+      <div class="head-spacer"></div>
+      <div class="btn-wrapper"></div>
+    </div>
+    <span class="floor-label">2楼</span>
+    <div class="comment-content no-extra-margin">
+      <div class="pb-rich-text"><div class="pb-content-item"><span class="pb-text-wrapper text">楼层一的正文内容。</span></div></div>
+      <div class="pc-pb-comments-desc">
+        <div class="comment-desc-left"><span>4小时前</span><span>天津</span></div>
+        <div class="comment-desc-right"><span class="zan-container-dark opera-container"><span>赞</span></span><span class="reply-container opera-container"><span class="reply">回复</span></span></div>
+      </div>
+    </div>
+    <!-- 12 条楼中楼由页脚脚本生成，用来测「每页 10 条 → 2 页」的分页 -->
+    <div class="lzl-wrapper" id="lzlw"></div>
+    <div class="show-more-lzl" data-sib="1">加载更多楼中楼</div>
+  </div>
+
+  <div class="pb-comment-item post" data-floor="3" data-id="2">
+    <div class="head-line user-info">
+      <div class="left-box"><span><div class="popover__reference"><a class="avatar" href="#"><img class="avatar-img" alt=""></a></div></span></div>
+      <div class="head-info"><a class="name-info-link" href="#"><div class="name-info"><a class="head-name" href="#">用户D</a></div></a></div>
+      <div class="head-spacer"></div>
+      <div class="btn-wrapper"></div>
+    </div>
+    <span class="floor-label">3楼</span>
+    <div class="comment-content no-extra-margin">
+      <div class="pb-rich-text"><div class="pb-content-item"><span class="pb-text-wrapper text">二楼的内容。</span></div></div>
+    </div>
+  </div>
+
+  <div class="pb-comment-item post" data-floor="4" data-id="3">
+    <div class="head-line user-info">
+      <div class="left-box"><span><div class="popover__reference"><a class="avatar" href="#"><img class="avatar-img" alt=""></a></div></span></div>
+      <div class="head-info"><a class="name-info-link" href="#"><div class="name-info"><a class="head-name" href="#">用户E</a></div></a></div>
+      <div class="head-spacer"></div>
+      <div class="btn-wrapper"></div>
+    </div>
+    <span class="floor-label">4楼</span>
+    <div class="comment-content no-extra-margin">
+      <div class="pb-rich-text"><div class="pb-content-item"><span class="pb-text-wrapper text">三楼的内容。</span></div></div>
+    </div>
+  </div>
+</div>
+<button class="load-more" id="more">加载更多</button>
+<script>
+  /* ---------- 生成楼中楼（结构完全复刻真实页面的 .pb-lzl-item） ---------- */
+  window.__lzlSeq = 0;
+
+  function makeLzlItem(n) {
+    const d = document.createElement('div');
+    d.className = 'pb-lzl-item';
+    d.dataset.lzl = String(n);
+    d.innerHTML =
+      '<div class="head-line user-info">' +
+        '<div class="left-box"><span><div class="popover__reference"><a class="avatar" href="#"><img class="avatar-img" alt=""></a></div></span></div>' +
+        '<div class="head-info"><a class="name-info-link" href="#"><div class="name-info"><a class="head-name" href="#">用户' + n + '</a></div></a></div>' +
+        '<div class="head-spacer"></div>' +
+        '<div class="btn-wrapper"></div>' +
+      '</div>' +
+      '<div class="comment-content no-extra-margin">' +
+        '<div class="pb-rich-text"><div class="pb-content-item"><span class="pb-text-wrapper text">楼中楼回复内容 ' + n + '</span></div></div>' +
+        '<div class="pc-pb-comments-desc">' +
+          '<div class="comment-desc-left"><span>刚刚</span><span>天津</span></div>' +
+          '<div class="comment-desc-right"><span class="zan-container-dark opera-container"><span>赞</span></span></div>' +
+        '</div>' +
+      '</div>';
+    return d;
+  }
+
+  function appendLzl(count) {
+    const wrap = document.getElementById('lzlw');
+    for (let i = 0; i < count; i++) {
+      window.__lzlSeq += 1;
+      wrap.appendChild(makeLzlItem(window.__lzlSeq));
+    }
+  }
+
+  (function buildLzl() {
+    appendLzl(12);
+    const more = document.createElement('div');
+    more.className = 'show-more-lzl';
+    more.textContent = '展开更多回复';
+    document.getElementById('lzlw').appendChild(more);
+  })();
+
+  /* 站点的「展开更多回复」：点一次再多加载 10 条，加载完就把按钮去掉（模拟真实懒加载） */
+  document.querySelectorAll('.show-more-lzl').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      appendLzl(10);
+      document.querySelectorAll('.show-more-lzl').forEach((n) => n.remove());
+    });
+  });
+
+  /* ---------- 排序标签：点击切换 active（脚本应自动点一次「正序」） ---------- */
+  window.__sortClicks = [];
+  document.querySelectorAll('.sub-tab-item').forEach((item) => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.sub-tab-item').forEach((n) => n.classList.remove('sub-tab-item-active'));
+      item.classList.add('sub-tab-item-active');
+      window.__sortClicks.push(item.textContent.trim());
+    });
+  });
+
+  /* ---------- 加载更多楼层 ---------- */
+  let page = 4;
+  document.getElementById('more').addEventListener('click', () => {
+    const list = document.getElementById('postlist');
+    for (let i = 0; i < 5; i++) {
+      page++;
+      const div = document.createElement('div');
+      div.className = 'pb-comment-item post';
+      div.dataset.floor = String(page);
+      div.innerHTML = '<span class="floor-label">' + page + '楼</span><div class="post-body">追加楼层 ' + page + '</div>';
+      list.appendChild(div);
+    }
+  });
+</script>
+</body>
+</html>

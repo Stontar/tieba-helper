@@ -1,0 +1,14 @@
+# 本地截图 / 诊断样本：可能包含真实帖子和用户名，不要提交
+refs/
+*.png
+*.jpg
+*.jpeg
+
+# 本地产物
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+
+# 诊断导出的 JSON
+tieba-diag-*.json
